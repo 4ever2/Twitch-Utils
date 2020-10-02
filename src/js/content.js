@@ -10,6 +10,7 @@ function disableAutoPlayNew() {
     chrome.storage.local.get({
         frontPageAutoPlay: true
     }, function(options) {
+        // Check if feature is enabled
         if (options.frontPageAutoPlay) {
             var featuredContent = document.getElementsByClassName("featured-content-carousel")[0];
 
@@ -41,7 +42,59 @@ function disableAutoPlayNew() {
     });
 }
 
+function muteAds() {
+    // Are we on a page with a player?
+    var videoContainers = document.getElementsByClassName("video-player__container");
+    if (videoContainers.length == 0) {
+        return; // We are not on a page with an active stream
+    }
+
+    // We assume that we are not on a page with multiple streams
+    // Squad streaming is not supported
+    var videoContainer = videoContainers[0]
+    var videoOverlay = videoContainer.getElementsByClassName("video-player__overlay")[0];
+
+    // Load options
+    chrome.storage.local.get({
+        adMute: true
+    }, function(options) {
+        // Check if option is enabled
+        if (options.adMute) {
+            // Get stream node
+            var streams = videoContainer.getElementsByTagName("video");
+            if (streams.length == 0) {
+                return;
+            }
+            var stream = streams[0];
+
+            // Get div where ad timer appears
+            var adScript = videoOverlay.querySelector("div.video-player__overlay div.tw-absolute.tw-bottom-0.tw-left-0.tw-right-0.tw-top-0 div");
+            var wasMuted = stream.muted;
+
+            var config = { attributes: false, childList: true, subtree: true };
+            var adCallback = function(mutationsList, observer) {
+                // Ad event detected
+                if (adScript.childElementCount > 0) {
+                    // Mute stream
+                    wasMuted = stream.muted;
+                    stream.muted = true;
+                } else {
+                    // Restore sound setting to what it was before ad started
+                    stream.muted = wasMuted;
+                }
+            };
+            
+            // Start listener for ads
+            var adObserver = new MutationObserver(adCallback);
+            adObserver.observe(adScript, config);
+        }
+    });
+}
+
 window.addEventListener("load", function(){
     // Pause player if on front page and feature is enabled
     disableAutoPlayNew();
+
+    // Mute player during ads
+    muteAds();
 });

@@ -1,8 +1,10 @@
 // Saves options to chrome.storage
 function save_options() {
   var frontPageAutoPlay = document.getElementById('frontPageAutoPlay').checked;
+  var adMute = document.getElementById('adMute').checked;
   chrome.storage.local.set({
-    frontPageAutoPlay: frontPageAutoPlay
+    frontPageAutoPlay: frontPageAutoPlay,
+    adMute: adMute
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -18,9 +20,11 @@ function save_options() {
 function restore_options() {
   // Use default value frontPageAutoPlay = true.
   chrome.storage.local.get({
-    frontPageAutoPlay: true
+    frontPageAutoPlay: true,
+    adMute: true
   }, function(items) {
     document.getElementById('frontPageAutoPlay').checked = items.frontPageAutoPlay;
+    document.getElementById('adMute').checked = items.adMute;
   });
 }
 document.addEventListener('DOMContentLoaded', restore_options);

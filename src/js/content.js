@@ -1,5 +1,16 @@
 console.log("Twitch utils extension injected on page " + window.location.href);
 
+// Warning message used when hiding
+var adWarning = document.createElement("div");
+adWarning.id = "adWarning";
+adWarning.textContent = "Ad in progress";
+adWarning.style.fontSize = "xxx-large";
+adWarning.style.height = "100%";
+adWarning.style.display = "flex";
+adWarning.style.alignItems = "center";
+adWarning.style.justifyContent = "center";
+adWarning.style.color = "dimgrey";
+
 function disableAutoPlayNew() {
     // Check that we are on the front page of twitch
     if (window.location.pathname != "/") {
@@ -56,10 +67,11 @@ function muteAds() {
 
     // Load options
     chrome.storage.local.get({
-        adMute: true
+        adMute: true,
+        adHide: true
     }, function(options) {
         // Check if option is enabled
-        if (options.adMute) {
+        if (options.adMute || options.adHide) {
             // Get stream node
             var streams = videoContainer.getElementsByTagName("video");
             if (streams.length == 0) {
@@ -75,12 +87,28 @@ function muteAds() {
             var adCallback = function(mutationsList, observer) {
                 // Ad event detected
                 if (adScript.childElementCount > 0) {
-                    // Mute stream
-                    wasMuted = stream.muted;
-                    stream.muted = true;
+                    if (options.adMute) {
+                        // Mute stream
+                        wasMuted = stream.muted;
+                        stream.muted = true;
+                    }
+                    if (options.adHide) {
+                        // Hide ad
+                        stream.style.visibility = "hidden";
+                        // Add message telling user that an ad is in progress
+                        videoContainer.appendChild(adWarning);
+                    }
                 } else {
-                    // Restore sound setting to what it was before ad started
-                    stream.muted = wasMuted;
+                    if (options.adMute){
+                        // Restore sound setting to what it was before ad started
+                        stream.muted = wasMuted;
+                    }
+                    if (options.adHide) {
+                        // Make stream visible again
+                        stream.style.visibility = "visible";
+                        // Remove "ad in progress" message
+                        videoContainer.removeChild(adWarning);
+                    }
                 }
             };
             

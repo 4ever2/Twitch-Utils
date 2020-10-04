@@ -119,10 +119,76 @@ function muteAds() {
     });
 }
 
+function claimChannelPoints() {
+    // Are we on a page with a chat window?
+    var chatWindows = document.getElementsByClassName("stream-chat");
+    if (chatWindows.length == 0) {
+        return; // We are not on a page with a chat window
+    }
+
+    var chat = chatWindows[0] // Assumes that there will only be one chat window
+
+    // Load options
+    chrome.storage.local.get({
+        channelPointsClaim: false
+    }, function(options) {
+        // Check if option is enabled
+        if (options.channelPointsClaim) {
+            const config = { attributes: false, childList: true, subtree: true };
+            const channelPointcallback = function(mutationsList, observer) {
+                for (mutation of mutationsList) {
+                    // Check if channel point section have been added to chat window yet
+                    if (mutation.target.className === "tw-relative tw-z-default" || mutation.target.className === "") {
+
+                        // For some reason twitch doesn't always deliver community-points-summary in the same mutation
+                        // So we have to check for both mutation target "div.tw-relative.tw-z-default" and "div"
+                        var pointsContainer = chat.querySelector('div.community-points-summary div.tw-transition');
+                        if (!pointsContainer) {
+                            continue;
+                        }
+                        
+                        // Stop listening for further events
+                        chatLoadObserver.disconnect();
+
+                        // Look if there are already points to be collected
+                        button = pointsContainer.querySelector('button');
+                        if (button) {
+                            button.click();
+                        }
+
+                        const channelPointcallback = function(mutationsList, observer) {
+                            for(let mutation of mutationsList) {
+                                if (mutation.addedNodes.length > 0) {
+                                    // Look for points claim button
+                                    button = pointsContainer.querySelector('button');
+                                    if (button) {
+                                        button.click();
+                                    }
+                                }
+                            }
+                        };
+                    
+                        // Listen for changes in channel points container
+                        const channelPointsObserver = new MutationObserver(channelPointcallback);
+                        channelPointsObserver.observe(pointsContainer, config);
+                    }
+                }
+            };
+        
+            // Listen for changes in chat container
+            const chatLoadObserver = new MutationObserver(channelPointcallback);
+            chatLoadObserver.observe(chat, config);
+        }
+    });
+}
+
 window.addEventListener("load", function(){
     // Pause player if on front page and feature is enabled
     disableAutoPlayNew();
 
     // Mute player during ads
     muteAds();
+
+    // Auto claim channel points
+    claimChannelPoints();
 });

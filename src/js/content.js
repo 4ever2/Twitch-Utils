@@ -130,10 +130,11 @@ function claimChannelPoints() {
 
     // Load options
     chrome.storage.local.get({
-        channelPointsClaim: false
+        channelPointsClaim: false,
+        channelPointsHide: false
     }, function(options) {
         // Check if option is enabled
-        if (options.channelPointsClaim) {
+        if (options.channelPointsClaim || options.channelPointsHide) {
             const config = { attributes: false, childList: true, subtree: true };
             const channelPointcallback = function(mutationsList, observer) {
                 for (mutation of mutationsList) {
@@ -150,27 +151,35 @@ function claimChannelPoints() {
                         // Stop listening for further events
                         chatLoadObserver.disconnect();
 
-                        // Look if there are already points to be collected
-                        button = pointsContainer.querySelector('button');
-                        if (button) {
-                            button.click();
+                        // Functionality for hiding channel points
+                        if (options.channelPointsHide) {
+                            pointsContainer.parentNode.style.visibility = "hidden";
                         }
+                        
+                        // Functionality for auto claiming channel points
+                        if (options.channelPointsClaim) {
+                            // Look if there are already points to be collected
+                            button = pointsContainer.querySelector('button');
+                            if (button) {
+                                button.click();
+                            }
 
-                        const channelPointcallback = function(mutationsList, observer) {
-                            for(let mutation of mutationsList) {
-                                if (mutation.addedNodes.length > 0) {
-                                    // Look for points claim button
-                                    button = pointsContainer.querySelector('button');
-                                    if (button) {
-                                        button.click();
+                            const channelPointcallback = function(mutationsList, observer) {
+                                for(let mutation of mutationsList) {
+                                    if (mutation.addedNodes.length > 0) {
+                                        // Look for points claim button
+                                        button = pointsContainer.querySelector('button');
+                                        if (button) {
+                                            button.click();
+                                        }
                                     }
                                 }
-                            }
-                        };
-                    
-                        // Listen for changes in channel points container
-                        const channelPointsObserver = new MutationObserver(channelPointcallback);
-                        channelPointsObserver.observe(pointsContainer, config);
+                            };
+                        
+                            // Listen for changes in channel points container
+                            const channelPointsObserver = new MutationObserver(channelPointcallback);
+                            channelPointsObserver.observe(pointsContainer, config);
+                        }
                     }
                 }
             };

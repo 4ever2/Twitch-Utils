@@ -9,3 +9,7 @@
 ### VisualStudioCode Patch
 .history
 .ionide
+
+### Chromium extensions
+*.crx
+*.pem

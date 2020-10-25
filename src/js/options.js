@@ -1,8 +1,16 @@
 // Saves options to chrome.storage
 function save_options() {
   var frontPageAutoPlay = document.getElementById('frontPageAutoPlay').checked;
+  var adMute = document.getElementById('adMute').checked;
+  var adHide = document.getElementById('adHide').checked;
+  var channelPointsClaim = document.getElementById('channelPointsClaim').checked;
+  var channelPointsHide = document.getElementById('channelPointsHide').checked;
   chrome.storage.local.set({
-    frontPageAutoPlay: frontPageAutoPlay
+    frontPageAutoPlay: frontPageAutoPlay,
+    adMute: adMute,
+    adHide: adHide,
+    channelPointsClaim: channelPointsClaim,
+    channelPointsHide: channelPointsHide
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -18,9 +26,17 @@ function save_options() {
 function restore_options() {
   // Use default value frontPageAutoPlay = true.
   chrome.storage.local.get({
-    frontPageAutoPlay: true
+    frontPageAutoPlay: true,
+    adMute: true,
+    adHide: true,
+    channelPointsClaim: false,
+    channelPointsHide: false
   }, function(items) {
     document.getElementById('frontPageAutoPlay').checked = items.frontPageAutoPlay;
+    document.getElementById('adMute').checked = items.adMute;
+    document.getElementById('adHide').checked = items.adHide;
+    document.getElementById('channelPointsClaim').checked = items.channelPointsClaim;
+    document.getElementById('channelPointsHide').checked = items.channelPointsHide;
   });
 }
 document.addEventListener('DOMContentLoaded', restore_options);
